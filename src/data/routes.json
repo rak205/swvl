@@ -1,0 +1,64 @@
+{
+    "data": [
+        {
+            "station_id": 1,
+            "station_name": "Station A",
+            "station_latitude": 29.99509712,
+            "station_longitude": 31.4459768
+        },
+        {
+            "station_id": 2,
+            "station_name": "Station B",
+            "station_latitude": 30.01288023,
+            "station_longitude": 31.43102269
+        },
+        {
+            "station_id": 3,
+            "station_name": "Station C",
+            "station_latitude": 30.01642345,
+            "station_longitude": 31.43356512
+        },
+        {
+            "station_id": 4,
+            "station_name": "Station D",
+            "station_latitude": 30.01637555,
+            "station_longitude": 31.39839364
+        },
+        {
+            "station_id": 5,
+            "station_name": "Station E",
+            "station_latitude": 30.0409879,
+            "station_longitude": 31.34613896
+        },
+        {
+            "station_id": 6,
+            "station_name": "Station F",
+            "station_latitude": 30.04505095,
+            "station_longitude": 31.34143553
+        },
+        {
+            "station_id": 7,
+            "station_name": "Station G",
+            "station_latitude": 30.05408947,
+            "station_longitude": 31.3421715
+        },
+        {
+            "station_id": 8,
+            "station_name": "Station H",
+            "station_latitude": 30.06198228,            
+            "station_longitude": 31.34523262
+        },
+        {
+            "station_id": 9,
+            "station_name": "Station I",
+            "station_latitude": 30.07322503,
+            "station_longitude": 31.34378507
+        },
+        {
+            "station_id": 10,
+            "station_name": "Station J",
+            "station_latitude": 30.08201257,
+            "station_longitude": 31.34388217
+        }
+    ]
+}

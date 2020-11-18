@@ -13,37 +13,82 @@ class Map extends React.Component {
                 lat: stations.data[0].station_latitude,
                 lng: stations.data[0].station_longitude
             },
-            count: 1,
+            count: 0,
             interval: null,
             disabled: false,
-            route: [],
+            path: [],
+            busStops: stations.data.slice(1, -1).map((station) => {
+                return {
+                    lat: station.station_latitude,
+                    lng: station.station_longitude
+                }
+            }),
             directions: null
         }
     }
 
+    findandSetBusStops = () => {
+        const busStopIds = this.state.busStops.map((busStop) => {
+            return this.state.path.map((pathCoordinates) => {
+                return {
+                    id: pathCoordinates.id,
+                    lat: pathCoordinates.lat,
+                    lng: pathCoordinates.lng,
+                    distance: this.getDistance(pathCoordinates, busStop)
+                }
+            }).reduce((p, c) => p.distance < c.distance ? p : c);
+        }).map((busStop) => {
+            return busStop.id
+        });
+        const pathWithBusStops = this.state.path.map((pathCoordinates) => {
+                return {
+                    id: pathCoordinates.id,
+                    lat: pathCoordinates.lat,
+                    lng: pathCoordinates.lng,
+                    stop: (busStopIds.includes(pathCoordinates.id))? true: false
+                }
+        });
+        this.setState({ ...this.state, path: pathWithBusStops });
+    };
+
+    getDistance = (pointA, pointB) => {
+        const distance = this.state.busStops.length && window.google.maps.geometry.spherical.computeDistanceBetween(
+            new window.google.maps.LatLng(pointA.lat, pointA.lng),
+            new window.google.maps.LatLng(pointB.lat, pointB.lng)
+        )
+        return distance;
+    }
+
     startBus = () => {
-        this.setState({ ...this.state, disabled: true })
-        this.interval = setInterval(this.animateBus, 500);
+        this.setState({ ...this.state, disabled: true, count: this.state.count + 1 });
+        this.interval = setInterval(this.animateBus, 200);
     };
 
     stopBus = () => {
         window.clearInterval(this.interval);
+        this.interval = null;
+        setTimeout(this.startBus, 5000); // start the bus after 5 seconds
     };
 
     animateBus = () => {
-        if (this.state.count >= this.state.route.length) {
-            window.clearInterval(this.interval)
+        if (this.state.count >= this.state.path.length) {
+            window.clearInterval(this.interval);
+            this.interval = null;
             return;
         }
-        this.state.route.length && this.setState({
+
+        if (this.state.path[this.state.count].stop) {
+            this.stopBus();
+        }
+
+        this.state.path.length && this.setState({
             ...this.state,
-            busPosition: this.state.route[this.state.count],
+            busPosition: this.state.path[this.state.count],
             count: this.state.count + 1
         })
     };
 
     componentDidMount = () => {
-
         const directionsService = new window.google.maps.DirectionsService();
 
         const origin = {
@@ -74,8 +119,14 @@ class Map extends React.Component {
                     this.setState({
                         ...this.state,
                         directions: result,
-                        route: result.routes[0].overview_path
-                    });
+                        path: result.routes[0].overview_path.map((station, index) => {
+                            return {
+                                id: index,
+                                lat: station.lat(),
+                                lng: station.lng()
+                            }
+                        }),
+                    }, this.findandSetBusStops);
                 } else {
                     console.error(`error fetching directions ${result}`);
                 }
@@ -116,7 +167,7 @@ class Map extends React.Component {
             </GoogleMap>
 
             <Button
-                style={{ display: 'block', margin: '5px auto' }}
+                style={{ display: 'block', margin: '10px auto' }}
                 onClick={this.startBus}
                 disabled={this.state.disabled}
                 color="primary" variant="contained" size='small'

@@ -76,8 +76,6 @@ class Map extends React.Component {
                         directions: result,
                         route: result.routes[0].overview_path
                     });
-
-
                 } else {
                     console.error(`error fetching directions ${result}`);
                 }

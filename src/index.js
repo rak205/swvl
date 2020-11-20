@@ -3,11 +3,14 @@ import ReactDOM from 'react-dom';
 import './styles/index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import GlobalStateProvider from './store/GlobalStoreProvider';
 
 ReactDOM.render(
-  <React.Fragment>
-    <App />
-  </React.Fragment>,
+  <GlobalStateProvider>
+    <React.Fragment>
+      <App />
+    </React.Fragment>
+  </GlobalStateProvider>,
   document.getElementById('root')
 );
 

@@ -2,10 +2,11 @@
 import React from 'react';
 import { withGoogleMap, withScriptjs, GoogleMap, DirectionsRenderer, Marker } from 'react-google-maps';
 import * as stations from '../data/routes.json';
-import { Button } from '@material-ui/core';
+import { Row, Button } from 'react-bootstrap';
+import Context from '../store/context';
 
 class Map extends React.Component {
-
+    static contextType = Context;
     constructor(props) {
         super(props);
         this.state = {
@@ -23,6 +24,7 @@ class Map extends React.Component {
                     lng: station.station_longitude
                 }
             }),
+            nextBusStop: 2,
             directions: null
         }
     }
@@ -41,12 +43,12 @@ class Map extends React.Component {
             return busStop.id
         });
         const pathWithBusStops = this.state.path.map((pathCoordinates) => {
-                return {
-                    id: pathCoordinates.id,
-                    lat: pathCoordinates.lat,
-                    lng: pathCoordinates.lng,
-                    stop: (busStopIds.includes(pathCoordinates.id))? true: false
-                }
+            return {
+                id: pathCoordinates.id,
+                lat: pathCoordinates.lat,
+                lng: pathCoordinates.lng,
+                stop: (busStopIds.includes(pathCoordinates.id)) ? true : false
+            }
         });
         this.setState({ ...this.state, path: pathWithBusStops });
     };
@@ -66,14 +68,15 @@ class Map extends React.Component {
 
     stopBus = () => {
         window.clearInterval(this.interval);
-        this.interval = null;
         setTimeout(this.startBus, 5000); // start the bus after 5 seconds
+        this.context.globalDispatch({ type: "UPDATE_PASSENGERS", busStop: this.state.nextBusStop })
+        this.setState({ ...this.state, nextBusStop: this.state.nextBusStop + 1 });
     };
 
     animateBus = () => {
         if (this.state.count >= this.state.path.length) {
             window.clearInterval(this.interval);
-            this.interval = null;
+            this.context.globalDispatch({ type: "UPDATE_PASSENGERS", busStop: this.state.nextBusStop });
             return;
         }
 
@@ -135,46 +138,47 @@ class Map extends React.Component {
     };
 
     render = () => {
-        return (<>
-            <GoogleMap
-                defaultZoom={12}
-                defaultCenter={{ lat: 30.0409879, lng: 31.34613896 }}
-            >
-                <DirectionsRenderer
-                    directions={this.state.directions}
-                    options={{
-                        polylineOptions: {
-                            strokeColor: '#ef0420',
-                            strokeOpacity: 0.7,
-                            strokeWeight: 3
-                        },
-                        markerOptions: {
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                strokeColor: '#011740',
-                                scale: 3,
-                                strokeWeight: 6,
+        return (
+            <>
+                <GoogleMap
+                    defaultZoom={12}
+                    defaultCenter={{ lat: 30.0409879, lng: 31.34613896 }}
+                >
+                    <DirectionsRenderer
+                        directions={this.state.directions}
+                        options={{
+                            polylineOptions: {
+                                strokeColor: '#ef0420',
+                                strokeOpacity: 0.7,
+                                strokeWeight: 3
+                            },
+                            markerOptions: {
+                                icon: {
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    strokeColor: '#011740',
+                                    scale: 3,
+                                    strokeWeight: 6,
 
-                            }
-                        },
-                    }}
-                />
-                <Marker
-                    position={this.state.busPosition}
-                    icon={new google.maps.MarkerImage('https://maps.gstatic.com/mapfiles/transit/iw2/6/bus.png')}
-                />
+                                }
+                            },
+                        }}
+                    />
+                    <Marker
+                        position={this.state.busPosition}
+                        icon={new google.maps.MarkerImage('https://maps.gstatic.com/mapfiles/transit/iw2/6/bus.png')}
+                    />
 
-            </GoogleMap>
+                </GoogleMap>
 
-            <Button
-                style={{ display: 'block', margin: '10px auto' }}
-                onClick={this.startBus}
-                disabled={this.state.disabled}
-                color="primary" variant="contained" size='small'
-            >
-                Start Ride
-            </Button>
-        </>
+                <Button
+                    style={{ display: 'block', margin: '10px auto' }}
+                    onClick={this.startBus}
+                    disabled={this.state.disabled}
+                    variant="primary"
+                >
+                    Start Ride
+                </Button>
+            </>
         )
     }
 }
@@ -182,12 +186,14 @@ class Map extends React.Component {
 const WrappedMap = withScriptjs(withGoogleMap(Map))
 
 export default () => (
-    <div style={{ width: '100%', height: '500px' }}>
-        <WrappedMap
-            googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}`}
-            loadingElement={<div style={{ height: `100%` }} />}
-            containerElement={<div style={{ height: `100%` }} />}
-            mapElement={<div style={{ height: `100%` }} />}
-        />
-    </div>
+    <Row>
+        <div style={{ width: '100%', height: '350px' }}>
+            <WrappedMap
+                googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}`}
+                loadingElement={<div style={{ height: `100%` }} />}
+                containerElement={<div style={{ height: `100%` }} />}
+                mapElement={<div style={{ height: `100%` }} />}
+            />
+        </div>
+    </Row>
 )

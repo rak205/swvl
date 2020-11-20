@@ -75,6 +75,7 @@ class Map extends React.Component {
 
     animateBus = () => {
         if (this.state.count >= this.state.path.length) {
+            localStorage.setItem('location', JSON.stringify(this.state.path[this.state.count - 1]));
             window.clearInterval(this.interval);
             this.context.globalDispatch({ type: "UPDATE_PASSENGERS", busStop: this.state.nextBusStop });
             return;
@@ -164,16 +165,14 @@ class Map extends React.Component {
                         }}
                     />
                     <Marker
-                        position={this.state.busPosition}
+                        position={(localStorage.getItem('location')) ? JSON.parse(localStorage.getItem('location')) : this.state.busPosition}
                         icon={new google.maps.MarkerImage('https://maps.gstatic.com/mapfiles/transit/iw2/6/bus.png')}
                     />
-
                 </GoogleMap>
-
                 <Button
                     style={{ display: 'block', margin: '10px auto' }}
                     onClick={this.startBus}
-                    disabled={this.state.disabled}
+                    disabled={(localStorage.getItem('location')) ? true : this.state.disabled}
                     variant="primary"
                 >
                     Start Ride

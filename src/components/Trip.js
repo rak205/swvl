@@ -1,8 +1,10 @@
+import React, { useContext } from 'react';
 import { Row, Col, Image } from 'react-bootstrap';
 import { Star, GeoFill, Cash, AlignTop, AlignBottom } from 'react-bootstrap-icons';
+import Context from '../store/context';
 
 function Trip() {
-
+    const { globalState } = useContext(Context);
     return (
         <>
             <Row style={{ marginTop: '55px' }}><Col><h4> Trip Information </h4></Col></Row>
@@ -32,7 +34,7 @@ function Trip() {
                 <Col xs={12} sm={6} md={4} lg={4} className={'px-5 my-2'} >
                     <Row>
                         <GeoFill style={{ margin: '3px 3px' }} size={16} />
-                        <p style={{ fontSize: '13px', margin: '0px 0px', fontWeight: '500' }}>Trip Distance: 47 km</p>
+                        <p style={{ fontSize: '13px', margin: '0px 0px', fontWeight: '500' }}>Trip Distance: {globalState.distance} KM</p>
                     </Row>
                     <Row>
                         <Cash style={{ margin: '3px 3px' }} size={16} />

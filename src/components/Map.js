@@ -119,6 +119,11 @@ class Map extends React.Component {
                 travelMode: window.google.maps.TravelMode.DRIVING
             },
             (result, status) => {
+                const totalDistance = result.routes[0].legs.map((leg) => {
+                    return leg.distance.value
+                }).reduce((a, b) => a + b);
+                this.context.globalDispatch({ type: "DISTANCE", value: totalDistance / 1000 })
+
                 if (status === window.google.maps.DirectionsStatus.OK) {
                     this.setState({
                         ...this.state,
@@ -157,8 +162,8 @@ class Map extends React.Component {
                                 icon: {
                                     path: google.maps.SymbolPath.CIRCLE,
                                     strokeColor: '#011740',
-                                    scale: 3,
-                                    strokeWeight: 6,
+                                    scale: 2,
+                                    strokeWeight: 4,
 
                                 }
                             },

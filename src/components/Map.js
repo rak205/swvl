@@ -15,6 +15,7 @@ class Map extends React.Component {
                 lng: stations.data[0].station_longitude
             },
             count: 0,
+            districtCount: 0,
             interval: null,
             disabled: false,
             path: [],
@@ -30,6 +31,11 @@ class Map extends React.Component {
     }
 
     findandSetBusStops = () => {
+        this.context.globalDispatch({
+            type: "DISTRICT",
+            start_district: this.state.districts[0],
+            end_district: this.state.districts[1],
+        });
         const busStopIds = this.state.busStops.map((busStop) => {
             return this.state.path.map((pathCoordinates) => {
                 return {
@@ -62,7 +68,12 @@ class Map extends React.Component {
     }
 
     startBus = () => {
-        this.setState({ ...this.state, disabled: true, count: this.state.count + 1 });
+        this.setState({
+            ...this.state,
+            disabled: true,
+            count: this.state.count + 1,
+            districtCount: this.state.districtCount + 1
+        });
         this.interval = setInterval(this.animateBus, 200);
     };
 
@@ -71,6 +82,11 @@ class Map extends React.Component {
         setTimeout(this.startBus, 5000); // start the bus after 5 seconds
         this.context.globalDispatch({ type: "UPDATE_PASSENGERS", busStop: this.state.nextBusStop })
         this.setState({ ...this.state, nextBusStop: this.state.nextBusStop + 1 });
+        this.context.globalDispatch({
+            type: "DISTRICT",
+            start_district: this.state.districts[this.state.districtCount],
+            end_district: this.state.districts[this.state.districtCount + 1],
+        });
     };
 
     animateBus = () => {
@@ -91,6 +107,13 @@ class Map extends React.Component {
             count: this.state.count + 1
         })
     };
+
+    calculateTotalDistance = (result) => {
+        const totalDistance = result.routes[0].legs.map((leg) => {
+            return leg.distance.value
+        }).reduce((a, b) => a + b);
+        return totalDistance / 1000;
+    }
 
     componentDidMount = () => {
         const directionsService = new window.google.maps.DirectionsService();
@@ -119,11 +142,7 @@ class Map extends React.Component {
                 travelMode: window.google.maps.TravelMode.DRIVING
             },
             (result, status) => {
-                const totalDistance = result.routes[0].legs.map((leg) => {
-                    return leg.distance.value
-                }).reduce((a, b) => a + b);
-                this.context.globalDispatch({ type: "DISTANCE", value: totalDistance / 1000 })
-
+                this.context.globalDispatch({ type: "DISTANCE", value: this.calculateTotalDistance(result) });
                 if (status === window.google.maps.DirectionsStatus.OK) {
                     this.setState({
                         ...this.state,
@@ -135,6 +154,9 @@ class Map extends React.Component {
                                 lng: station.lng()
                             }
                         }),
+                        districts: result.routes[0].legs.map((leg) => {
+                            return leg.end_address
+                        })
                     }, this.findandSetBusStops);
                 } else {
                     console.error(`error fetching directions ${result}`);

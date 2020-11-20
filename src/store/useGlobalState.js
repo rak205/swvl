@@ -4,6 +4,10 @@ import { RIDE_STATUS } from '../utils/constants'
 
 const reducer = (state, action) => {
     switch (action.type) {
+        case "DISTRICT":
+            return {
+                ...state, start_district: action.start_district, end_district: action.end_district
+            }
         case "DISTANCE":
             return {
                 ...state, distance: action.value
@@ -25,7 +29,9 @@ const reducer = (state, action) => {
 const useGlobalState = () => {
     const [globalState, globalDispatch] = useReducer(reducer, {
         users: users.data,
-        distance: 0
+        distance: 0,
+        start_district: null,
+        end_district: null,
     })
     return { globalState, globalDispatch };
 }

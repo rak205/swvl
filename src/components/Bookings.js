@@ -7,8 +7,8 @@ function Bookings() {
     const { globalState } = useContext(Context);
     return (
         <>
-            <Row style={{ marginTop: '55px' }}> <Col><h3> Bookings </h3></Col></Row>
-            <Row>
+            <Row ><Col><h4> Bookings </h4></Col></Row>
+            <Row className='mb-4'>
                 {globalState.users.map((user) => {
                     return (
                         <Col key={user.id} xs={12} sm={6} md={4} lg={3} className='my-2'>
@@ -17,7 +17,7 @@ function Bookings() {
                                     <Image height={40} width={40} src={user.pic} roundedCircle />
                                 </Col>
                                 <Col xs={9}>
-                                    <Row noGutters={true}><b>{user.name}</b></Row>
+                                    <Row style={{ fontSize: '14px' }} noGutters={true}><b>{user.name}</b></Row>
                                     <Row style={{ fontSize: '12px' }} noGutters={true}><b>Status:</b>{user.status}</Row>
                                     <Row style={{ fontSize: '12px' }} noGutters={true}><b>Origin:</b>{user.origin}</Row>
                                     <Row style={{ fontSize: '12px' }} noGutters={true}><b>Destination:</b>{user.destination}</Row>

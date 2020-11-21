@@ -48,8 +48,8 @@ class Map extends React.Component {
         e.preventDefault();
         if (this.validate()) {
             this.setState({
-                ...this.state, modal: false, warning: false,
-                payment: 'cash', book_button: true,
+                ...this.state, bookRideModal: false, warning: false,
+                book_button: true, card: ''
             });
             this.context.globalDispatch({
                 type: "USER",
@@ -108,9 +108,9 @@ class Map extends React.Component {
         });
     }
 
-    showModal = () => { this.setState({ ...this.state, modal: true }) };
+    showModal = () => { this.setState({ ...this.state, bookRideModal: true }) };
 
-    hideModal = () => { this.setState({ ...this.state, modal: false }) };
+    hideModal = () => { this.setState({ ...this.state, bookRideModal: false, payment: 'cash' }) };
 
     findandSetBusStops = () => {
         this.context.globalDispatch({
@@ -249,7 +249,7 @@ class Map extends React.Component {
 
     bookRideModal = () => {
         return (
-            <Modal show={this.state.modal} onHide={this.hideModal} backdrop="static"
+            <Modal show={this.state.bookRideModal} onHide={this.hideModal} backdrop="static"
                 keyboard={false} >
                 <Form onSubmit={this.bookRide}>
                     <Modal.Header>
@@ -303,6 +303,11 @@ class Map extends React.Component {
                     </Modal.Footer>
                 </Form>
             </Modal>
+        );
+    };
+
+    statsModal = () => {
+        return (<></>
         );
     };
 

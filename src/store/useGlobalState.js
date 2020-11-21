@@ -1,6 +1,6 @@
 import { useReducer } from 'react';
 import * as users from '../data/users.json';
-import { RIDE_STATUS } from '../utils/constants'
+import { RIDE_STATUS } from '../utils/constants';
 
 const reducer = (state, action) => {
     switch (action.type) {

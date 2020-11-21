@@ -5,6 +5,7 @@ import * as stations from '../data/routes.json';
 import * as user from '../data/user.json';
 import { Row, Button, Col, Modal, Form } from 'react-bootstrap';
 import Context from '../store/context';
+import { RIDE_STATUS } from '../utils/constants';
 
 class Map extends React.Component {
     static contextType = Context;
@@ -83,18 +84,27 @@ class Map extends React.Component {
     };
 
     formOriginChange = (e) => {
+        let number = parseInt(e.target.value);
         this.setState({
             ...this.state,
-            user: { ...this.state.user, origin: e.target.value },
+            user: {
+                ...this.state.user,
+                origin: number,
+                status: (number > 1) ? RIDE_STATUS.BOOKED : RIDE_STATUS.CHECKED_IN
+            },
             formDestinationStation: this.formDestinationStation.filter((data) => data > e.target.value)
         });
     };
 
     formDestinationChange = (e) => {
+        let number = parseInt(e.target.value);
         this.setState({
             ...this.state,
-            user: { ...this.state.user, destination: e.target.value },
-            formOriginStation: this.formOriginStation.filter((data) => data < e.target.value)
+            user: {
+                ...this.state.user,
+                destination: number
+            },
+            formOriginStation: this.formOriginStation.filter((data) => data < number)
         });
     }
 
@@ -280,7 +290,7 @@ class Map extends React.Component {
                                     placeholder="xxxx-xxxx-xxxx-xxxx"
                                     isInvalid={this.state.warning}
                                     isValid={this.state.success}
-                                    maxlength="19"
+                                    maxLength="19"
                                     onChange={this.cardNumberChange}
                                 />
                                 <Form.Control.Feedback type="invalid">Card Number is not correct!</Form.Control.Feedback>

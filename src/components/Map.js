@@ -363,7 +363,7 @@ class Map extends React.Component {
     }
 };
 
-const WrappedMap = withScriptjs(withGoogleMap(Map))
+const WrappedMap = withScriptjs(withGoogleMap(Map));
 
 export default () => (
     <Row>

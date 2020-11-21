@@ -4,6 +4,10 @@ import { RIDE_STATUS } from '../utils/constants'
 
 const reducer = (state, action) => {
     switch (action.type) {
+        case "USER":
+            return {
+                ...state, users: [action.user, ...state.users]
+            }
         case "DISTRICT":
             return {
                 ...state, start_district: action.start_district, end_district: action.end_district

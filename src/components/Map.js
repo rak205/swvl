@@ -2,7 +2,8 @@
 import React from 'react';
 import { withGoogleMap, withScriptjs, GoogleMap, DirectionsRenderer, Marker } from 'react-google-maps';
 import * as stations from '../data/routes.json';
-import { Row, Button } from 'react-bootstrap';
+import * as user from '../data/user.json';
+import { Row, Button, Col, Modal, Form } from 'react-bootstrap';
 import Context from '../store/context';
 
 class Map extends React.Component {
@@ -10,6 +11,7 @@ class Map extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            user: user.default,
             busPosition: {
                 lat: stations.data[0].station_latitude,
                 lng: stations.data[0].station_longitude
@@ -17,7 +19,8 @@ class Map extends React.Component {
             count: 0,
             districtCount: 0,
             interval: null,
-            disabled: false,
+            start_button: false,
+            book_button: false,
             path: [],
             busStops: stations.data.slice(1, -1).map((station) => {
                 return {
@@ -26,9 +29,78 @@ class Map extends React.Component {
                 }
             }),
             nextBusStop: 2,
-            directions: null
+            directions: null,
+            bookRideModal: false,
+            statsModal: false,
+            formOriginStation: this.formOriginStation,
+            formDestinationStation: this.formDestinationStation,
+            payment: 'cash',
+            warning: false,
+            card: ''
         }
     }
+
+    formOriginStation = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    formDestinationStation = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    bookRide = (e) => {
+        e.preventDefault();
+        if (this.validate()) {
+            this.setState({
+                ...this.state, modal: false, warning: false,
+                payment: 'cash', book_button: true,
+            });
+            this.context.globalDispatch({
+                type: "USER",
+                user: this.state.user,
+            });
+        }
+    };
+
+    cardNumberChange = (event) => {
+        this.setState({ ...this.state, card: event.target.value });
+    }
+
+    validate = () => {
+        if ((this.state.payment === 'card')) {
+            let pattern = new RegExp("[0-9]{16}|[0-9]{4}[- ][0-9]{4}[- ][0-9]{4}[- ][0-9]{4}");
+            if (pattern.test(this.state.card)) {
+                this.setState({ ...this.state, warning: false });
+                return true;
+            } else {
+                this.setState({ ...this.state, warning: true });
+                return false;
+            }
+        }
+        return true;
+    }
+
+    paymentMethodChange = (e) => {
+        this.setState({
+            ...this.state,
+            payment: e.target.value
+        });
+    };
+
+    formOriginChange = (e) => {
+        this.setState({
+            ...this.state,
+            user: { ...this.state.user, origin: e.target.value },
+            formDestinationStation: this.formDestinationStation.filter((data) => data > e.target.value)
+        });
+    };
+
+    formDestinationChange = (e) => {
+        this.setState({
+            ...this.state,
+            user: { ...this.state.user, destination: e.target.value },
+            formOriginStation: this.formOriginStation.filter((data) => data < e.target.value)
+        });
+    }
+
+    showModal = () => { this.setState({ ...this.state, modal: true }) };
+
+    hideModal = () => { this.setState({ ...this.state, modal: false }) };
 
     findandSetBusStops = () => {
         this.context.globalDispatch({
@@ -65,12 +137,12 @@ class Map extends React.Component {
             new window.google.maps.LatLng(pointB.lat, pointB.lng)
         )
         return distance;
-    }
+    };
 
     startBus = () => {
         this.setState({
             ...this.state,
-            disabled: true,
+            start_button: true,
             count: this.state.count + 1,
             districtCount: this.state.districtCount + 1
         });
@@ -113,7 +185,7 @@ class Map extends React.Component {
             return leg.distance.value
         }).reduce((a, b) => a + b);
         return totalDistance / 1000;
-    }
+    };
 
     componentDidMount = () => {
         const directionsService = new window.google.maps.DirectionsService();
@@ -165,6 +237,65 @@ class Map extends React.Component {
         );
     };
 
+    bookRideModal = () => {
+        return (
+            <Modal show={this.state.modal} onHide={this.hideModal} backdrop="static"
+                keyboard={false} >
+                <Form onSubmit={this.bookRide}>
+                    <Modal.Header>
+                        <Modal.Title>Book Ride</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form.Row>
+                            <Form.Group as={Col} controlId="formOrigin" >
+                                <Form.Label>Origin</Form.Label>
+                                <Form.Control as="select" defaultValue={1} onChange={this.formOriginChange}>
+                                    {this.state.formOriginStation.map((station) => {
+                                        return <option key={station} value={station} >{station}</option>
+                                    })}
+                                </Form.Control>
+                            </Form.Group>
+                            <Form.Group as={Col} controlId="formDestination">
+                                <Form.Label>Destination</Form.Label>
+                                <Form.Control as="select" defaultValue={10} onChange={this.formDestinationChange}>
+                                    {this.state.formDestinationStation.map((station) => {
+                                        return <option key={station} value={station} >{station}</option>
+                                    })}
+                                </Form.Control>
+                            </Form.Group>
+                        </Form.Row>
+                        <Form.Row>
+                            <Form.Group as={Col} controlId="paymentMethod">
+                                <Form.Label>Payment Method</Form.Label>
+                                <Form.Control as="select" defaultValue={'cash'} onChange={this.paymentMethodChange}>
+                                    <option value={'cash'}>Cash</option>
+                                    <option value={'card'}>Card</option>
+                                </Form.Control>
+                            </Form.Group>
+                        </Form.Row>
+                        {(this.state.payment === 'card') && <Form.Row>
+                            <Form.Group as={Col} controlId="formCard">
+                                <Form.Label>Card</Form.Label>
+                                <Form.Control required={true}
+                                    placeholder="xxxx-xxxx-xxxx-xxxx"
+                                    isInvalid={this.state.warning}
+                                    isValid={this.state.success}
+                                    maxlength="19"
+                                    onChange={this.cardNumberChange}
+                                />
+                                <Form.Control.Feedback type="invalid">Card Number is not correct!</Form.Control.Feedback>
+                            </Form.Group>
+                        </Form.Row>}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button onClick={this.hideModal} variant="secondary">Cancel</Button>
+                        <Button type='submit' variant="primary">Book</Button>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
+        );
+    };
+
     render = () => {
         return (
             <>
@@ -196,18 +327,31 @@ class Map extends React.Component {
                         icon={new google.maps.MarkerImage('https://maps.gstatic.com/mapfiles/transit/iw2/6/bus.png')}
                     />
                 </GoogleMap>
-                <Button
-                    style={{ display: 'block', margin: '10px auto' }}
-                    onClick={this.startBus}
-                    disabled={(localStorage.getItem('location')) ? true : this.state.disabled}
-                    variant="primary"
-                >
-                    Start Ride
-                </Button>
+                <Row noGutters={true} className={'justify-content-center'}>
+                    <Col xs={'auto'}>
+                        <Button
+                            style={{ margin: '10px 5px' }}
+                            onClick={this.startBus}
+                            disabled={(localStorage.getItem('location')) ? true : this.state.start_button}
+                            variant="success"
+                        >
+                            Start Ride
+                        </Button>
+                        <Button
+                            onClick={this.showModal}
+                            style={{ margin: '10px 5px' }}
+                            variant="primary"
+                            disabled={this.state.book_button}
+                        >
+                            Book Ride
+                    </Button>
+                    </Col>
+                </Row>
+                <this.bookRideModal></this.bookRideModal>
             </>
         )
     }
-}
+};
 
 const WrappedMap = withScriptjs(withGoogleMap(Map))
 

@@ -7,15 +7,11 @@ import Trip from './components/Trip';
 
 function App() {
   return (
-    <Container fluid >
-      <div className='app'>
-        <Header />
-        <div className='app__body'>
-          <Map />
-          <Trip />
-          <Bookings />
-        </div>
-      </div>
+    <Container fluid>
+      <Header />
+      <Map />
+      <Trip />
+      <Bookings />
     </Container>
   )
 }

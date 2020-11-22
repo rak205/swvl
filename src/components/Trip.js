@@ -46,4 +46,4 @@ function Trip() {
     )
 }
 
-export default Trip
+export default Trip;

@@ -469,4 +469,4 @@ const Ride = () => {
         </Row>
     )
 }
-export default Ride
+export default Ride;

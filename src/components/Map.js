@@ -1,11 +1,12 @@
 /*global google*/
 import React from 'react';
 import { withGoogleMap, withScriptjs, GoogleMap, DirectionsRenderer, Marker } from 'react-google-maps';
+import { Row, Button, Col, Modal, Form } from 'react-bootstrap';
+import Chart from "react-google-charts";
+import Context from '../store/context';
+import { RIDE_STATUS, PAYMENT } from '../utils/constants';
 import * as stations from '../data/routes.json';
 import * as user from '../data/user.json';
-import { Row, Button, Col, Modal, Form } from 'react-bootstrap';
-import Context from '../store/context';
-import { RIDE_STATUS } from '../utils/constants';
 
 class Map extends React.Component {
     static contextType = Context;
@@ -35,7 +36,7 @@ class Map extends React.Component {
             statsModal: false,
             formOriginStation: this.formOriginStation,
             formDestinationStation: this.formDestinationStation,
-            payment: 'cash',
+            payment: PAYMENT.CASH,
             warning: false,
             card: ''
         }
@@ -43,6 +44,7 @@ class Map extends React.Component {
 
     formOriginStation = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     formDestinationStation = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+    busStopsIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
     bookRide = (e) => {
         e.preventDefault();
@@ -63,7 +65,7 @@ class Map extends React.Component {
     }
 
     validate = () => {
-        if ((this.state.payment === 'card')) {
+        if ((this.state.payment === PAYMENT.CARD)) {
             let pattern = new RegExp("[0-9]{16}|[0-9]{4}[- ][0-9]{4}[- ][0-9]{4}[- ][0-9]{4}");
             if (pattern.test(this.state.card)) {
                 this.setState({ ...this.state, warning: false });
@@ -110,7 +112,9 @@ class Map extends React.Component {
 
     showModal = () => { this.setState({ ...this.state, bookRideModal: true }) };
 
-    hideModal = () => { this.setState({ ...this.state, bookRideModal: false, payment: 'cash' }) };
+    hideModal = () => { this.setState({ ...this.state, bookRideModal: false, payment: PAYMENT.CASH }) };
+
+    hideStatsModal = () => { this.setState({ ...this.state, statsModal: false }) };
 
     findandSetBusStops = () => {
         this.context.globalDispatch({
@@ -162,20 +166,29 @@ class Map extends React.Component {
     stopBus = () => {
         window.clearInterval(this.interval);
         setTimeout(this.startBus, 5000); // start the bus after 5 seconds
-        this.context.globalDispatch({ type: "UPDATE_PASSENGERS", busStop: this.state.nextBusStop })
-        this.setState({ ...this.state, nextBusStop: this.state.nextBusStop + 1 });
+        this.context.globalDispatch({
+            type: "UPDATE_PASSENGERS",
+            busStop: this.state.nextBusStop
+        });
         this.context.globalDispatch({
             type: "DISTRICT",
             start_district: this.state.districts[this.state.districtCount],
             end_district: this.state.districts[this.state.districtCount + 1],
         });
+        this.setState({
+            ...this.state,
+            nextBusStop: this.state.nextBusStop + 1,
+        });
+
     };
 
     animateBus = () => {
-        if (this.state.count >= this.state.path.length) {
-            localStorage.setItem('location', JSON.stringify(this.state.path[this.state.count - 1]));
+        if (this.state.count >= this.state.path.length) { //
             window.clearInterval(this.interval);
+            this.statsModal();
+            localStorage.setItem('location', JSON.stringify(this.state.path[this.state.count - 1]));
             this.context.globalDispatch({ type: "UPDATE_PASSENGERS", busStop: this.state.nextBusStop });
+            this.setState({ ...this.state, statsModal: true });
             return;
         }
 
@@ -277,13 +290,13 @@ class Map extends React.Component {
                         <Form.Row>
                             <Form.Group as={Col} controlId="paymentMethod">
                                 <Form.Label>Payment Method</Form.Label>
-                                <Form.Control as="select" defaultValue={'cash'} onChange={this.paymentMethodChange}>
-                                    <option value={'cash'}>Cash</option>
-                                    <option value={'card'}>Card</option>
+                                <Form.Control as="select" defaultValue={PAYMENT.CASH} onChange={this.paymentMethodChange}>
+                                    <option value={PAYMENT.CASH}>Cash</option>
+                                    <option value={PAYMENT.CARD}>Card</option>
                                 </Form.Control>
                             </Form.Group>
                         </Form.Row>
-                        {(this.state.payment === 'card') && <Form.Row>
+                        {(this.state.payment === PAYMENT.CARD) && <Form.Row>
                             <Form.Group as={Col} controlId="formCard">
                                 <Form.Label>Card</Form.Label>
                                 <Form.Control required={true}
@@ -306,8 +319,58 @@ class Map extends React.Component {
         );
     };
 
+    statsGenerate = () => {
+        const checkIns = this.busStopsIds.map((id) => {
+            return [`Station ${id}`, this.context.globalState.users.filter((data) => data.origin === id).length]
+        });
+        const checkOuts = this.busStopsIds.map((id) => {
+            return [`Station ${id}`, this.context.globalState.users.filter((data) => data.destination === id).length]
+        });
+        const users = this.context.globalState.users.map((user) => {
+            return [user.name, user.status]
+        });
+        return [
+            [["Stations", "Check-Ins"], ...checkIns],
+            [["Stations", "Check-Outs"], ...checkOuts],
+            [["Users", "Ride Status"], ...users],
+        ]
+    };
+
     statsModal = () => {
-        return (<></>
+
+        const data = this.statsGenerate();
+        return (
+            <Modal show={this.state.statsModal} backdrop="static" keyboard={false}
+                size='lg' onHide={this.hideStatsModal}
+            >
+                <Modal.Header>
+                    <Modal.Title>Stats</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Chart
+                        chartType="Line"
+                        width="100%"
+                        height="400px"
+                        data={data[0]}
+                    />
+                    <Chart
+                        chartType="PieChart"
+                        width="100%"
+                        height="400px"
+                        data={data[1]}
+                        options={{ title: "Check-Outs", pieHole: 0.4 }}
+                    />
+                    <Chart
+                        chartType="Bar"
+                        width="100%"
+                        height="400px"
+                        data={data[2]}
+                    />
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button onClick={this.hideStatsModal} variant="secondary">Close</Button>
+                </Modal.Footer>
+            </Modal>
         );
     };
 
@@ -363,6 +426,7 @@ class Map extends React.Component {
                     </Col>
                 </Row>
                 <this.bookRideModal></this.bookRideModal>
+                <this.statsModal></this.statsModal>
             </>
         )
     }

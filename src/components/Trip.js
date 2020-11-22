@@ -7,8 +7,8 @@ function Trip() {
     const { globalState } = useContext(Context);
     return (
         <>
-            <Row style={{ marginTop: '55px' }}><Col><h4> Trip Information </h4></Col></Row>
-            <Row className='mb-4'>
+            <Row noGutters={true} style={{ marginTop: '55px' }}><Col><h4> Trip Information </h4></Col></Row>
+            <Row noGutters={true} className='mb-4'>
                 <Col xs={12} sm={12} md={5} lg={4} className={'my-2 pr-0'} >
                     <Row className="align-items-center" noGutters={true}>
                         <Col xs={4} className="d-flex justify-content-center"  >

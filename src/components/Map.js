@@ -4,7 +4,7 @@ import { withGoogleMap, withScriptjs, GoogleMap, DirectionsRenderer, Marker } fr
 import { Row, Button, Col, Modal, Form } from 'react-bootstrap';
 import Chart from "react-google-charts";
 import Context from '../store/context';
-import { RIDE_STATUS, PAYMENT } from '../utils/constants';
+import { RIDE_STATUS, PAYMENT, CAR } from '../utils/constants';
 import * as stations from '../data/routes.json';
 import * as user from '../data/user.json';
 
@@ -41,7 +41,11 @@ class Map extends React.Component {
             card: ''
         }
     }
-
+    icon = {
+        url: CAR,
+        scaledSize: new window.google.maps.Size(20, 20),
+        anchor: { x: 10, y: 10 }
+    };
     formOriginStation = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     formDestinationStation = [2, 3, 4, 5, 6, 7, 8, 9, 10];
     busStopsIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -179,7 +183,6 @@ class Map extends React.Component {
             ...this.state,
             nextBusStop: this.state.nextBusStop + 1,
         });
-
     };
 
     animateBus = () => {
@@ -196,11 +199,30 @@ class Map extends React.Component {
             this.stopBus();
         }
 
+        const current = this.state.path[this.state.count];
+        const next = this.state.path[this.state.count + 1];
+
+        this.rotateVehicle(current, next)
+
         this.state.path.length && this.setState({
             ...this.state,
-            busPosition: this.state.path[this.state.count],
+            busPosition: current,
             count: this.state.count + 1
-        })
+        });
+    };
+
+    rotateVehicle = (A, B) => {
+        if (B) {
+            const angle = window.google.maps.geometry.spherical.computeHeading(
+                new window.google.maps.LatLng(A.lat, A.lng),
+                new window.google.maps.LatLng(B.lat, B.lng)
+            );
+            const actualAngle = angle - 90;
+            const marker = document.querySelector(`[src="${CAR}"]`);
+            if (marker) { // rotating the vehicle image
+                marker.style.transform = `rotate(${actualAngle}deg)`
+            }
+        }
     };
 
     calculateTotalDistance = (result) => {
@@ -401,7 +423,7 @@ class Map extends React.Component {
                     />
                     <Marker
                         position={(localStorage.getItem('location')) ? JSON.parse(localStorage.getItem('location')) : this.state.busPosition}
-                        icon={new google.maps.MarkerImage('https://maps.gstatic.com/mapfiles/transit/iw2/6/bus.png')}
+                        icon={this.icon}
                     />
                 </GoogleMap>
                 <Row noGutters={true} className={'justify-content-center'}>

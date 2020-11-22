@@ -112,7 +112,7 @@ class Map extends React.Component {
 
     showModal = () => { this.setState({ ...this.state, bookRideModal: true }) };
 
-    hideModal = () => { this.setState({ ...this.state, bookRideModal: false, payment: PAYMENT.CASH }) };
+    hideModal = () => { this.setState({ ...this.state, bookRideModal: false, payment: PAYMENT.CASH, warning: false }) };
 
     hideStatsModal = () => { this.setState({ ...this.state, statsModal: false }) };
 
@@ -302,7 +302,6 @@ class Map extends React.Component {
                                 <Form.Control required={true}
                                     placeholder="xxxx-xxxx-xxxx-xxxx"
                                     isInvalid={this.state.warning}
-                                    isValid={this.state.success}
                                     maxLength="19"
                                     onChange={this.cardNumberChange}
                                 />

@@ -11,3 +11,4 @@
 * Bus stops at each station for 5 seconds, updates the state and the move on to next stop.
 * I save the driver's locatiion in localStorage at the end of the ride.
 * To calculate the rotation of vehicle image, I have used `google.maps.geometry`. 
+* Data for users and routes is present in `swvl/src/data/users.json` and `swvl/src/data/routes.json`.
